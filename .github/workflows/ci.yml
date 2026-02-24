@@ -1,0 +1,92 @@
+# ============================================================
+# Zentro CI/CD Pipeline
+# Runs on every push to main and on all pull requests
+#
+# Jobs:
+#   1. check-frontend  — Type check + build the Next.js app
+#   2. check-backend   — Type check the Express API
+# ============================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ----------------------------------------------------------
+  # Job 1: Frontend — Type check & build
+  # ----------------------------------------------------------
+  check-frontend:
+    name: Frontend (Next.js)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: zentro-app
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: zentro-app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build (production)
+        run: npm run build
+        env:
+          # Provide dummy values so the build succeeds in CI.
+          # Real values are set in Vercel environment variables.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          NEXT_PUBLIC_API_URL: http://localhost:3001
+          NEXT_PUBLIC_FIREBASE_API_KEY: placeholder
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: placeholder.firebaseapp.com
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: placeholder
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: placeholder.appspot.com
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "000000000000"
+          NEXT_PUBLIC_FIREBASE_APP_ID: "1:000:web:000"
+          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: G-XXXXXXXXXX
+
+  # ----------------------------------------------------------
+  # Job 2: Backend — Type check the Railway API
+  # ----------------------------------------------------------
+  check-backend:
+    name: Backend (Express API)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: zentro-api
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: zentro-api/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
