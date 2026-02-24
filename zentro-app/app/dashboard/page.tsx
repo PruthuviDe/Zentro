@@ -1,10 +1,12 @@
 // ============================================================
 // Dashboard Page (/dashboard)
 // Protected route - main app interface
-// Displays stats, tasks, and productivity suggestion
+// force-dynamic prevents static prerendering at build time
 // ============================================================
 
 "use client";
+
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
